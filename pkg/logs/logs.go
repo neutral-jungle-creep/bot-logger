@@ -4,6 +4,8 @@ import (
 	"os"
 )
 
+const NoAccess = "Нет доступа"
+
 // CreateOrOpenFileForLogs если файла не существует, создает его, если файл существует, открывает.
 func CreateOrOpenFileForLogs(fileName *string) (*os.File, error) {
 

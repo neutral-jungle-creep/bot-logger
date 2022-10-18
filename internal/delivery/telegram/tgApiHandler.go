@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"bot_logger/configs"
+	"bot_logger/pkg/logs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"strconv"
@@ -33,6 +34,6 @@ func checkChatAccess(update tgbotapi.Update, chatID string) bool {
 }
 
 func sendMessageToChat(bot *tgbotapi.BotAPI, chatId int64) {
-	msg := tgbotapi.NewMessage(chatId, "Нет доступа")
+	msg := tgbotapi.NewMessage(chatId, logs.NoAccess)
 	bot.Send(msg)
 }

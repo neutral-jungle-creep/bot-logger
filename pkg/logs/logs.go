@@ -4,7 +4,11 @@ import (
 	"os"
 )
 
-const NoAccess = "Нет доступа"
+const (
+	NoAccess    = "Нет доступа"
+	ConnDBError = "Ошибка подключения к базе данных"
+	ConnCorrect = "Подключение к базе данных успешно"
+)
 
 // CreateOrOpenFileForLogs если файла не существует, создает его, если файл существует, открывает.
 func CreateOrOpenFileForLogs(fileName *string) (*os.File, error) {

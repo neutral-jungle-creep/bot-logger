@@ -9,6 +9,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
@@ -21,7 +22,7 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 	for update := range updates {
 		if checkChatAccess(update, config.AccessChatID) {
 			typeOfUpdate := defineUpdateType(&update)
-			typeOfUpdate.UpdateHandle(*config)
+			typeOfUpdate.UpdateHandle(config)
 		} else {
 			log.Println("error code 403: no access")
 			sendMessageToChat(bot, update.Message.Chat.ID)
@@ -55,7 +56,7 @@ func defineUpdateType(update *tgbotapi.Update) UpdateHandler {
 }
 
 type UpdateHandler interface {
-	UpdateHandle(config configs.Configuration)
+	UpdateHandle(config *configs.Configuration)
 }
 
 type UpdateUser struct {
@@ -68,18 +69,30 @@ type UpdateMessage struct {
 	IsEdit  bool
 }
 
-func (u UpdateUser) UpdateHandle(config configs.Configuration) {
+func (u UpdateUser) UpdateHandle(config *configs.Configuration) {
 	user := usecase.NewUser(u.User.UserName, strconv.FormatInt(u.User.ID, 10), u.IsActive)
 	usecase.RunUser(user, config)
 }
 
-func (u UpdateMessage) UpdateHandle(config configs.Configuration) {
+func (u UpdateMessage) UpdateHandle(config *configs.Configuration) {
+	date := parseTime(u.Message.Date)
 	messageSender := usecase.NewUser(u.Message.From.UserName, strconv.FormatInt(u.Message.From.ID, 10), true)
 	messageText := newMessageText(u.Message.Text)
 
-	message := usecase.NewMessage(strconv.Itoa(u.Message.MessageID), strconv.Itoa(u.Message.Date),
-		u.IsEdit, *messageSender, messageText)
+	message := usecase.NewMessage(strconv.Itoa(u.Message.MessageID), date, u.IsEdit, *messageSender, messageText)
 	usecase.RunMessage(message, config)
+}
+
+func parseTime(timeStamp int) string {
+	tm, err := strconv.ParseInt(strconv.Itoa(timeStamp), 10, 64)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	ut := time.Unix(tm, 0)
+	timeForStruct := ut.Format("2006-01-02T15:04:05")
+
+	return timeForStruct
 }
 
 func newMessageText(messageText string) domain.MessageText {

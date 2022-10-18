@@ -2,6 +2,7 @@ package main
 
 import (
 	"bot_logger/configs"
+	"bot_logger/internal/delivery/telegram"
 	"bot_logger/pkg/logs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"io"
@@ -29,4 +30,6 @@ func main() {
 
 	bot.Debug = false
 	log.Println("Bot has been started!", "Bot name is:", bot.Self.UserName)
+
+	telegram.Run(bot, config)
 }

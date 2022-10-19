@@ -7,16 +7,16 @@ import (
 	"context"
 )
 
-func RunMessage(message *domain.Message, config *configs.Configuration) *pgSQL.WriteDBResult {
+func RunMessage(message *domain.Message, config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
-		return &pgSQL.WriteDBResult{Err: err}
+		return err
 	}
 
 	result := pgSQL.WriteMessageToDB(message, conn)
 	conn.Close(context.Background())
 
-	return &pgSQL.WriteDBResult{Err: result}
+	return result
 }
 
 func NewMessage(id string, date string, isEdit bool, user domain.User, text domain.MessageText) *domain.Message {

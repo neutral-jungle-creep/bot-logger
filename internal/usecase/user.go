@@ -7,16 +7,16 @@ import (
 	"context"
 )
 
-func RunUser(user *domain.User, config *configs.Configuration) *pgSQL.WriteDBResult {
+func RunUser(user *domain.User, config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
-		return &pgSQL.WriteDBResult{Err: err}
+		return err
 	}
 
 	result := pgSQL.WriteUserToDB(user, conn)
 	conn.Close(context.Background())
 
-	return &pgSQL.WriteDBResult{Err: result}
+	return result
 }
 
 func NewUser(name string, id string, active bool) *domain.User {

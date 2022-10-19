@@ -22,10 +22,15 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 	for update := range updates {
 		if checkChatAccess(update, config.AccessChatID) {
 			typeOfUpdate := defineUpdateType(&update)
-			typeOfUpdate.UpdateHandle(config)
+			handleResult := typeOfUpdate.UpdateHandle(config)
+			if handleResult != nil {
+				msg := newBotMessageForChat(bot, update.Message.Chat.ID, logs.ErrWriteDB)
+				msg.sendMessageToChat()
+			}
 		} else {
 			log.Println("error code 403: no access")
-			sendMessageToChat(bot, update.Message.Chat.ID)
+			msg := newBotMessageForChat(bot, update.Message.Chat.ID, logs.NoAccess)
+			msg.sendMessageToChat()
 		}
 	}
 }
@@ -56,7 +61,7 @@ func defineUpdateType(update *tgbotapi.Update) UpdateHandler {
 }
 
 type UpdateHandler interface {
-	UpdateHandle(config *configs.Configuration)
+	UpdateHandle(config *configs.Configuration) error
 }
 
 type UpdateUser struct {
@@ -69,21 +74,25 @@ type UpdateMessage struct {
 	IsEdit  bool
 }
 
-func (u UpdateUser) UpdateHandle(config *configs.Configuration) {
+func (u UpdateUser) UpdateHandle(config *configs.Configuration) error {
 	user := usecase.NewUser(u.User.UserName, strconv.FormatInt(u.User.ID, 10), u.IsActive)
-	usecase.RunUser(user, config)
+	usecaseResult := usecase.RunUser(user, config)
+
+	return usecaseResult
 }
 
-func (u UpdateMessage) UpdateHandle(config *configs.Configuration) {
-	date := parseTime(u.Message.Date)
+func (u UpdateMessage) UpdateHandle(config *configs.Configuration) error {
+	date := parseTimeStamp(u.Message.Date)
 	messageSender := usecase.NewUser(u.Message.From.UserName, strconv.FormatInt(u.Message.From.ID, 10), true)
 	messageText := newMessageText(u.Message.Text)
 
 	message := usecase.NewMessage(strconv.Itoa(u.Message.MessageID), date, u.IsEdit, *messageSender, messageText)
-	usecase.RunMessage(message, config)
+	usecaseResult := usecase.RunMessage(message, config)
+
+	return usecaseResult
 }
 
-func parseTime(timeStamp int) string {
+func parseTimeStamp(timeStamp int) string {
 	tm, err := strconv.ParseInt(strconv.Itoa(timeStamp), 10, 64)
 	if err != nil {
 		log.Panic(err)
@@ -144,7 +153,21 @@ func returnKeyAndValue(text string, separator int) (string, string) {
 	return key, value
 }
 
-func sendMessageToChat(bot *tgbotapi.BotAPI, chatId int64) {
-	msg := tgbotapi.NewMessage(chatId, logs.NoAccess)
-	bot.Send(msg)
+type botMessageForChat struct {
+	bot     *tgbotapi.BotAPI
+	chatID  int64
+	message string
+}
+
+func newBotMessageForChat(bot *tgbotapi.BotAPI, chatId int64, text string) *botMessageForChat {
+	return &botMessageForChat{
+		bot:     bot,
+		chatID:  chatId,
+		message: text,
+	}
+}
+
+func (b botMessageForChat) sendMessageToChat() {
+	msg := tgbotapi.NewMessage(b.chatID, b.message)
+	b.bot.Send(msg)
 }

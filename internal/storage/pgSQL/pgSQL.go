@@ -11,13 +11,12 @@ import (
 
 const (
 	addMessage = `INSERT INTO public."test_logs" (message_id, date, query, problem, cause, solution, source,
-                v4_data, is_edit, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 
+                 is_edit, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 
                                                    (SELECT id FROM public."test_users"
-	 												WHERE tg_user_id = $10)
+	 												WHERE tg_user_id = $9)
 													)`
-	editMessage = `UPDATE public."test_logs" SET query=$1, problem=$2, cause=$3, solution=$4, 
-                              source=$5, v4_data=$6, is_edit=$7
-	               WHERE message_id=$8;`
+	editMessage = `UPDATE public."test_logs" SET query=$1, problem=$2, cause=$3, solution=$4, source=$5, is_edit=$6
+	               WHERE message_id=$7;`
 	addUser  = `INSERT INTO public."test_users" (user_name, tg_user_id, active_employee) VALUES ($1, $2, $3)`
 	editUser = `UPDATE public."test_users" SET active_employee=$1 WHERE tg_user_id=$2;`
 )
@@ -31,10 +30,6 @@ func NewConnectToDataBase(config *configs.Configuration) (*pgx.Conn, error) {
 	log.Println(logs.ConnCorrect)
 
 	return conn, nil
-}
-
-type WriteDBResult struct {
-	Err error
 }
 
 func WriteUserToDB(user *domain.User, conn *pgx.Conn) error {
@@ -89,7 +84,7 @@ func editMessageInDB(message *domain.Message, conn *pgx.Conn) error {
 		message.MessageText.Cause,
 		message.MessageText.Solution,
 		message.MessageText.Source,
-		message.V4Data,
+		//message.V4Data,
 		message.IsEdit,
 		message.MessageId,
 	)
@@ -111,7 +106,7 @@ func addMessageToDB(message *domain.Message, conn *pgx.Conn) error {
 		message.MessageText.Cause,
 		message.MessageText.Solution,
 		message.MessageText.Source,
-		message.V4Data,
+		//message.V4Data,
 		message.IsEdit,
 		message.MessageSender.UserId,
 	)

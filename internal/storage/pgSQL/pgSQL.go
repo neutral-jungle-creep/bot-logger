@@ -74,7 +74,15 @@ func editUserInDB(user *domain.User, conn *pgx.Conn) error {
 	return nil
 }
 
-func EditMessageInDB(message *domain.Message, conn *pgx.Conn) error {
+func WriteMessageToDB(message *domain.Message, conn *pgx.Conn) error {
+	if message.IsEdit {
+		return editMessageInDB(message, conn)
+	} else {
+		return addMessageToDB(message, conn)
+	}
+}
+
+func editMessageInDB(message *domain.Message, conn *pgx.Conn) error {
 	_, err := conn.Query(context.Background(), editMessage,
 		message.MessageText.Query,
 		message.MessageText.Problem,
@@ -94,7 +102,7 @@ func EditMessageInDB(message *domain.Message, conn *pgx.Conn) error {
 	return nil
 }
 
-func AddMessageToDB(message *domain.Message, conn *pgx.Conn) error {
+func addMessageToDB(message *domain.Message, conn *pgx.Conn) error {
 	_, err := conn.Query(context.Background(), addMessage,
 		message.MessageId,
 		message.Date,

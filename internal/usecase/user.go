@@ -4,6 +4,7 @@ import (
 	"bot_logger/configs"
 	"bot_logger/internal/domain"
 	"bot_logger/internal/storage/pgSQL"
+	"context"
 )
 
 func RunUser(user *domain.User, config *configs.Configuration) *pgSQL.WriteDBResult {
@@ -13,6 +14,7 @@ func RunUser(user *domain.User, config *configs.Configuration) *pgSQL.WriteDBRes
 	}
 
 	result := pgSQL.WriteUserToDB(user, conn)
+	conn.Close(context.Background())
 
 	return &pgSQL.WriteDBResult{Err: result}
 }

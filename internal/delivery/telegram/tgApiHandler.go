@@ -46,16 +46,16 @@ func checkChatAccess(update tgbotapi.Update, chatID string) bool {
 func defineUpdateType(update *tgbotapi.Update) UpdateHandler {
 	if update.Message != nil {
 		if update.Message.NewChatMembers != nil {
-			return UpdateUser{&update.Message.NewChatMembers[0], true}
+			return updateUser{&update.Message.NewChatMembers[0], true}
 		}
 		if update.Message.LeftChatMember != nil {
-			return UpdateUser{update.Message.LeftChatMember, false}
+			return updateUser{update.Message.LeftChatMember, false}
 		}
 		// обработка нового сообщения
-		return UpdateMessage{update.Message, false}
+		return updateMessage{update.Message, false}
 	} else if update.EditedMessage != nil {
 		// обработка отредактированного сообщения
-		return UpdateMessage{update.EditedMessage, true}
+		return updateMessage{update.EditedMessage, true}
 	}
 	return nil
 }
@@ -64,29 +64,29 @@ type UpdateHandler interface {
 	UpdateHandle(config *configs.Configuration) error
 }
 
-type UpdateUser struct {
-	User     *tgbotapi.User
-	IsActive bool
+type updateUser struct {
+	user    *tgbotapi.User
+	message bool
 }
 
-type UpdateMessage struct {
-	Message *tgbotapi.Message
-	IsEdit  bool
+type updateMessage struct {
+	message *tgbotapi.Message
+	isEdit  bool
 }
 
-func (u UpdateUser) UpdateHandle(config *configs.Configuration) error {
-	user := usecase.NewUser(u.User.UserName, strconv.FormatInt(u.User.ID, 10), u.IsActive)
+func (u updateUser) UpdateHandle(config *configs.Configuration) error {
+	user := usecase.NewUser(u.user.UserName, strconv.FormatInt(u.user.ID, 10), u.message)
 	usecaseResult := usecase.RunUser(user, config)
 
 	return usecaseResult
 }
 
-func (u UpdateMessage) UpdateHandle(config *configs.Configuration) error {
-	date := parseTimeStamp(u.Message.Date)
-	messageSender := usecase.NewUser(u.Message.From.UserName, strconv.FormatInt(u.Message.From.ID, 10), true)
-	messageText := newMessageText(u.Message.Text)
+func (u updateMessage) UpdateHandle(config *configs.Configuration) error {
+	date := parseTimeStamp(u.message.Date)
+	messageSender := usecase.NewUser(u.message.From.UserName, strconv.FormatInt(u.message.From.ID, 10), true)
+	messageText := newMessageText(u.message.Text)
 
-	message := usecase.NewMessage(strconv.Itoa(u.Message.MessageID), date, u.IsEdit, *messageSender, messageText)
+	message := usecase.NewMessage(strconv.Itoa(u.message.MessageID), date, u.isEdit, *messageSender, messageText)
 	usecaseResult := usecase.RunMessage(message, config)
 
 	return usecaseResult

@@ -7,24 +7,34 @@ import (
 	"context"
 )
 
-func RunMessage(message *domain.Message, config *configs.Configuration) error {
+type AddMessage struct {
+	Message *domain.Message
+}
+
+type EditMessage struct {
+	Message *domain.Message
+}
+
+func (a AddMessage) UpdateHandle(config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
 		return err
 	}
 
-	result := pgSQL.WriteMessageToDB(message, conn)
+	result := pgSQL.AddToDBMessage(a.Message, conn)
 	conn.Close(context.Background())
 
 	return result
 }
 
-func NewMessage(id string, date string, isEdit bool, user domain.User, text domain.MessageText) *domain.Message {
-	return &domain.Message{
-		MessageId:     id,
-		Date:          date,
-		IsEdit:        isEdit,
-		MessageSender: user,
-		MessageText:   text,
+func (e EditMessage) UpdateHandle(config *configs.Configuration) error {
+	conn, err := pgSQL.NewConnectToDataBase(config)
+	if err != nil {
+		return err
 	}
+
+	result := pgSQL.EditInDBMessage(e.Message, conn)
+	conn.Close(context.Background())
+
+	return result
 }

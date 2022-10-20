@@ -10,14 +10,19 @@ import (
 type Configuration struct {
 	Token             string `json:"token"`
 	LogFile           string `json:"logFile"`
-	LinkToDB          string `json:"linkToDB"`
 	UnwrittenDataFile string `json:"unwrittenDataFile"`
-	AccessChatID      string `json:"accessChatID"`
+	AccessChatID      int    `json:"accessChatID"`
+	AdminTgChatID     int    `json:"adminTgChatID"`
+	LinkToDB          string `json:"linkToDB"`
+	Queries           struct {
+		AddUser     string `json:"addUser"`
+		EditUser    string `json:"editUser"`
+		AddMessage  string `json:"addMessage"`
+		EditMessage string `json:"editMessage"`
+	} `json:"queries"`
 }
 
-func NewConfigFromFile(link string) *Configuration {
-	var config Configuration
-
+func (c *Configuration) FillConfiguration(link string) {
 	file, err := os.Open(link)
 	if err != nil {
 		log.Panic(err)
@@ -28,9 +33,7 @@ func NewConfigFromFile(link string) *Configuration {
 		log.Panic(err)
 	}
 
-	if err := json.Unmarshal(data, &config); err != nil {
+	if err := json.Unmarshal(data, &c); err != nil {
 		log.Panic(err)
 	}
-
-	return &config
 }

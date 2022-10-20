@@ -11,7 +11,8 @@ import (
 )
 
 func main() {
-	var config = configs.NewConfigFromFile("../configs/config.json")
+	var config configs.Configuration
+	config.FillConfiguration("../configs/config.json")
 
 	// запись логов в файл
 	file, err := logs.CreateOrOpenFileForLogs(&config.LogFile)
@@ -31,5 +32,5 @@ func main() {
 	bot.Debug = false
 	log.Println("Bot has been started!", "Bot name is:", bot.Self.UserName)
 
-	telegram.Run(bot, config)
+	telegram.Run(bot, &config)
 }

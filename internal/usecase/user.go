@@ -7,22 +7,34 @@ import (
 	"context"
 )
 
-func RunUser(user *domain.User, config *configs.Configuration) error {
+type AddUser struct {
+	User *domain.User
+}
+
+type EditUser struct {
+	User *domain.User
+}
+
+func (u *AddUser) UpdateHandle(config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
 		return err
 	}
 
-	result := pgSQL.WriteUserToDB(user, conn)
+	result := pgSQL.AddToDBUser(u.User, conn)
 	conn.Close(context.Background())
 
 	return result
 }
 
-func NewUser(name string, id string, active bool) *domain.User {
-	return &domain.User{
-		Username: name,
-		UserId:   id,
-		IsActive: active,
+func (u *EditUser) UpdateHandle(config *configs.Configuration) error {
+	conn, err := pgSQL.NewConnectToDataBase(config)
+	if err != nil {
+		return err
 	}
+
+	result := pgSQL.EditInDBUser(u.User, conn)
+	conn.Close(context.Background())
+
+	return result
 }

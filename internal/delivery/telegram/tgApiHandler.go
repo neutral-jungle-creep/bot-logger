@@ -24,7 +24,7 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 			typeOfUpdate := defineUpdateType(&update)
 			handleResult := typeOfUpdate.UpdateHandle(config)
 			if handleResult != nil {
-				msg := newBotMessageForChat(bot, update.Message.Chat.ID, logs.ErrWriteDB)
+				msg := newBotMessageForChat(bot, config.AdminTgChatID, logs.ErrWriteDB)
 				msg.sendMessageToChat()
 			}
 		} else {
@@ -35,8 +35,8 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 	}
 }
 
-func checkChatAccess(update tgbotapi.Update, chatID string) bool {
-	if strconv.FormatInt(update.FromChat().ID, 10) == chatID {
+func checkChatAccess(update tgbotapi.Update, chatID int64) bool {
+	if update.FromChat().ID == chatID {
 		return true
 	} else {
 		return false

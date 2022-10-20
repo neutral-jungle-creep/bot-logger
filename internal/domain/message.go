@@ -4,24 +4,16 @@ type Message struct {
 	MessageId     string
 	Date          string
 	IsEdit        bool
+	Text          string
 	MessageSender User
-	MessageText   MessageText
 }
 
-type MessageText struct {
-	Query    string
-	Problem  string
-	Cause    string
-	Solution string
-	Source   string
-}
-
-func NewMessage(id string, date string, isEdit bool, user *User, text *MessageText) *Message {
+func NewMessage(id string, date string, isEdit bool, text string, user *User) *Message {
 	return &Message{
 		MessageId:     id,
 		Date:          date,
 		IsEdit:        isEdit,
+		Text:          text,
 		MessageSender: *user,
-		MessageText:   *text,
 	}
 }

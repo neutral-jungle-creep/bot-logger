@@ -21,7 +21,8 @@ func (u *AddUser) UpdateHandle(config *configs.Configuration) error {
 		return err
 	}
 
-	result := pgSQL.AddToDBUser(u.User, conn)
+	user := pgSQL.NewAddUser(u.User, conn, config)
+	result := user.DBWrite()
 	conn.Close(context.Background())
 
 	return result
@@ -33,7 +34,8 @@ func (u *EditUser) UpdateHandle(config *configs.Configuration) error {
 		return err
 	}
 
-	result := pgSQL.EditInDBUser(u.User, conn)
+	user := pgSQL.NewEditUser(u.User, conn, config)
+	result := user.DBWrite()
 	conn.Close(context.Background())
 
 	return result

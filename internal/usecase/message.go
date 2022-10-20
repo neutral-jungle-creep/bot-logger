@@ -21,7 +21,8 @@ func (a AddMessage) UpdateHandle(config *configs.Configuration) error {
 		return err
 	}
 
-	result := pgSQL.AddToDBMessage(a.Message, conn, config)
+	message := pgSQL.NewAddMessage(a.Message, conn, config)
+	result := message.DBWrite()
 	conn.Close(context.Background())
 
 	return result
@@ -33,7 +34,8 @@ func (e EditMessage) UpdateHandle(config *configs.Configuration) error {
 		return err
 	}
 
-	result := pgSQL.EditInDBMessage(e.Message, conn)
+	message := pgSQL.NewEditMessage(e.Message, conn, config)
+	result := message.DBWrite()
 	conn.Close(context.Background())
 
 	return result

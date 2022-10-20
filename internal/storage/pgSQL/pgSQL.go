@@ -9,18 +9,6 @@ import (
 	"log"
 )
 
-const (
-	addMessage = `INSERT INTO public."test_logs" (message_id, date, query, problem, cause, solution, source,
-                 is_edit, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 
-                                                   (SELECT id FROM public."test_users"
-	 												WHERE tg_user_id = $9)
-													)`
-	editMessage = `UPDATE public."test_logs" SET query=$1, problem=$2, cause=$3, solution=$4, source=$5, is_edit=$6
-	               WHERE message_id=$7;`
-	addUser  = `INSERT INTO public."test_users" (user_name, tg_user_id, active_employee) VALUES ($1, $2, $3)`
-	editUser = `UPDATE public."test_users" SET active_employee=$1 WHERE tg_user_id=$2;`
-)
-
 func NewConnectToDataBase(config *configs.Configuration) (*pgx.Conn, error) {
 	conn, err := pgx.Connect(context.Background(), config.LinkToDB)
 	if err != nil {
@@ -32,89 +20,129 @@ func NewConnectToDataBase(config *configs.Configuration) (*pgx.Conn, error) {
 	return conn, nil
 }
 
-func WriteUserToDB(user *domain.User, conn *pgx.Conn) error {
-	if user.IsActive {
-		return addUserToDB(user, conn)
-	} else {
-		return editUserInDB(user, conn)
+type addUser struct {
+	user   *domain.User
+	conn   *pgx.Conn
+	config *configs.Configuration
+}
+
+type editUser struct {
+	user   *domain.User
+	conn   *pgx.Conn
+	config *configs.Configuration
+}
+
+func NewAddUser(user *domain.User, conn *pgx.Conn, config *configs.Configuration) *addUser {
+	return &addUser{
+		user:   user,
+		conn:   conn,
+		config: config,
 	}
 }
 
-func addUserToDB(user *domain.User, conn *pgx.Conn) error {
-	_, err := conn.Query(context.Background(), addUser,
-		user.Username,
-		user.UserId,
-		user.IsActive,
+func NewEditUser(user *domain.User, conn *pgx.Conn, config *configs.Configuration) *editUser {
+	return &editUser{
+		user:   user,
+		conn:   conn,
+		config: config,
+	}
+}
+
+func (a *addUser) DBWrite() error {
+	_, err := a.conn.Query(context.Background(), a.config.Queries.AddUser,
+		a.user.Username,
+		a.user.UserId,
+		a.user.IsActive,
 	)
 
 	if err != nil {
 		log.Println(logs.ErrAddBDU, err)
 		return err
 	}
-	log.Println(logs.AddDBU, user)
+	log.Println(logs.AddDBU, *a.user)
 	return nil
 }
 
-func editUserInDB(user *domain.User, conn *pgx.Conn) error {
-	_, err := conn.Query(context.Background(), editUser,
-		user.IsActive,
-		user.UserId,
+func (e *editUser) DBWrite() error {
+	_, err := e.conn.Query(context.Background(), e.config.Queries.EditUser,
+		e.user.IsActive,
+		e.user.UserId,
 	)
 
 	if err != nil {
 		log.Println(logs.ErrEditDBU, err)
 		return err
 	}
-	log.Println(logs.EditBDU, user)
+	log.Println(logs.EditBDU, *e.user)
 	return nil
 }
 
-func WriteMessageToDB(message *domain.Message, conn *pgx.Conn) error {
-	if message.IsEdit {
-		return editMessageInDB(message, conn)
-	} else {
-		return addMessageToDB(message, conn)
+type addMessage struct {
+	message *domain.Message
+	conn    *pgx.Conn
+	config  *configs.Configuration
+}
+
+type editMessage struct {
+	message *domain.Message
+	conn    *pgx.Conn
+	config  *configs.Configuration
+}
+
+func NewAddMessage(message *domain.Message, conn *pgx.Conn, config *configs.Configuration) *addMessage {
+	return &addMessage{
+		message: message,
+		conn:    conn,
+		config:  config,
 	}
 }
 
-func editMessageInDB(message *domain.Message, conn *pgx.Conn) error {
-	_, err := conn.Query(context.Background(), editMessage,
-		message.MessageText.Query,
-		message.MessageText.Problem,
-		message.MessageText.Cause,
-		message.MessageText.Solution,
-		message.MessageText.Source,
+func NewEditMessage(message *domain.Message, conn *pgx.Conn, config *configs.Configuration) *editMessage {
+	return &editMessage{
+		message: message,
+		conn:    conn,
+		config:  config,
+	}
+}
+
+func (e *editMessage) DBWrite() error {
+	_, err := e.conn.Query(context.Background(), e.config.Queries.EditMessage,
+		e.message.MessageText.Query,
+		e.message.MessageText.Problem,
+		e.message.MessageText.Cause,
+		e.message.MessageText.Solution,
+		e.message.MessageText.Source,
 		//message.V4Data,
-		message.IsEdit,
-		message.MessageId,
+		e.message.IsEdit,
+		e.message.MessageId,
 	)
 
 	if err != nil {
 		log.Println(logs.ErrEditBDM, err)
 		return err
 	}
-	log.Println(logs.EditDBM, message)
+	log.Println(logs.EditDBM, *e.message)
 	return nil
 }
 
-func addMessageToDB(message *domain.Message, conn *pgx.Conn) error {
-	_, err := conn.Query(context.Background(), addMessage,
-		message.MessageId,
-		message.Date,
-		message.MessageText.Query,
-		message.MessageText.Problem,
-		message.MessageText.Cause,
-		message.MessageText.Solution,
-		message.MessageText.Source,
+func (a *addMessage) DBWrite() error {
+	_, err := a.conn.Query(context.Background(), a.config.Queries.AddMessage,
+		a.message.MessageId,
+		a.message.Date,
+		a.message.MessageText.Query,
+		a.message.MessageText.Problem,
+		a.message.MessageText.Cause,
+		a.message.MessageText.Solution,
+		a.message.MessageText.Source,
 		//message.V4Data,
-		message.IsEdit,
-		message.MessageSender.UserId,
+		a.message.IsEdit,
+		a.message.MessageSender.UserId,
 	)
 
 	if err != nil {
 		log.Println(logs.ErrAddDBM, err)
 		return err
 	}
-	log.Println(logs.AddDBM, message)
+	log.Println(logs.AddDBM, *a.message)
 	return nil
 }

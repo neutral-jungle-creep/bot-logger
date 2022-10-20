@@ -80,7 +80,7 @@ func NewAddMessage(m *tgbotapi.Message) *usecase.AddMessage {
 	args := newArgsForMessage(m)
 
 	return &usecase.AddMessage{
-		Message: domain.NewMessage(args.id, args.date, false, args.v4Data, args.messageSender, args.messageText),
+		Message: domain.NewMessage(args.id, args.date, false, args.messageSender, args.messageText),
 	}
 }
 
@@ -88,7 +88,7 @@ func NewEditMessage(m *tgbotapi.Message) *usecase.EditMessage {
 	args := newArgsForMessage(m)
 
 	return &usecase.EditMessage{
-		Message: domain.NewMessage(args.id, args.date, true, args.v4Data, args.messageSender, args.messageText),
+		Message: domain.NewMessage(args.id, args.date, true, args.messageSender, args.messageText),
 	}
 }
 
@@ -104,7 +104,6 @@ func newArgsForMessage(m *tgbotapi.Message) *argsForMessage {
 	return &argsForMessage{
 		id:            strconv.Itoa(m.MessageID),
 		date:          parseTimeStamp(m.Date),
-		v4Data:        logs.NoAccess,
 		messageSender: domain.NewUser(m.From.UserName, strconv.FormatInt(m.From.ID, 10), true),
 		messageText:   newMessageText(m.Text),
 	}

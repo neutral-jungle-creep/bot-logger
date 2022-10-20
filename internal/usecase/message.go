@@ -21,7 +21,7 @@ func (a AddMessage) UpdateHandle(config *configs.Configuration) error {
 		return err
 	}
 
-	result := pgSQL.AddToDBMessage(a.Message, conn)
+	result := pgSQL.AddToDBMessage(a.Message, conn, config)
 	conn.Close(context.Background())
 
 	return result

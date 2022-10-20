@@ -46,16 +46,16 @@ func checkChatAccess(update tgbotapi.Update, chatID int64) bool {
 func defineUpdateType(update *tgbotapi.Update) UpdateHandler {
 	if update.Message != nil {
 		if update.Message.NewChatMembers != nil {
-			return updateUser{&update.Message.NewChatMembers[0], true}
+			return NewAddUser(&update.Message.NewChatMembers[0])
 		}
 		if update.Message.LeftChatMember != nil {
-			return updateUser{update.Message.LeftChatMember, false}
+			return NewEditUser(update.Message.LeftChatMember)
 		}
 		// обработка нового сообщения
-		return updateMessage{update.Message, false}
+		return NewAddMessage(update.Message)
 	} else if update.EditedMessage != nil {
 		// обработка отредактированного сообщения
-		return updateMessage{update.EditedMessage, true}
+		return NewEditMessage(update.EditedMessage)
 	}
 	return nil
 }
@@ -64,32 +64,50 @@ type UpdateHandler interface {
 	UpdateHandle(config *configs.Configuration) error
 }
 
-type updateUser struct {
-	user    *tgbotapi.User
-	message bool
+func NewAddUser(u *tgbotapi.User) *usecase.AddUser {
+	return &usecase.AddUser{
+		User: domain.NewUser(u.UserName, strconv.FormatInt(u.ID, 10), true),
+	}
 }
 
-type updateMessage struct {
-	message *tgbotapi.Message
-	isEdit  bool
+func NewEditUser(u *tgbotapi.User) *usecase.EditUser {
+	return &usecase.EditUser{
+		User: domain.NewUser(u.UserName, strconv.FormatInt(u.ID, 10), false),
+	}
 }
 
-func (u updateUser) UpdateHandle(config *configs.Configuration) error {
-	user := usecase.NewUser(u.user.UserName, strconv.FormatInt(u.user.ID, 10), u.message)
-	usecaseResult := usecase.RunUser(user, config)
+func NewAddMessage(m *tgbotapi.Message) *usecase.AddMessage {
+	args := newArgsForMessage(m)
 
-	return usecaseResult
+	return &usecase.AddMessage{
+		Message: domain.NewMessage(args.id, args.date, false, args.v4Data, args.messageSender, args.messageText),
+	}
 }
 
-func (u updateMessage) UpdateHandle(config *configs.Configuration) error {
-	date := parseTimeStamp(u.message.Date)
-	messageSender := usecase.NewUser(u.message.From.UserName, strconv.FormatInt(u.message.From.ID, 10), true)
-	messageText := newMessageText(u.message.Text)
+func NewEditMessage(m *tgbotapi.Message) *usecase.EditMessage {
+	args := newArgsForMessage(m)
 
-	message := usecase.NewMessage(strconv.Itoa(u.message.MessageID), date, u.isEdit, *messageSender, messageText)
-	usecaseResult := usecase.RunMessage(message, config)
+	return &usecase.EditMessage{
+		Message: domain.NewMessage(args.id, args.date, true, args.v4Data, args.messageSender, args.messageText),
+	}
+}
 
-	return usecaseResult
+type argsForMessage struct {
+	id            string
+	date          string
+	v4Data        string
+	messageSender *domain.User
+	messageText   *domain.MessageText
+}
+
+func newArgsForMessage(m *tgbotapi.Message) *argsForMessage {
+	return &argsForMessage{
+		id:            strconv.Itoa(m.MessageID),
+		date:          parseTimeStamp(m.Date),
+		v4Data:        logs.NoAccess,
+		messageSender: domain.NewUser(m.From.UserName, strconv.FormatInt(m.From.ID, 10), true),
+		messageText:   newMessageText(m.Text),
+	}
 }
 
 func parseTimeStamp(timeStamp int) string {
@@ -104,7 +122,7 @@ func parseTimeStamp(timeStamp int) string {
 	return timeForStruct
 }
 
-func newMessageText(messageText string) domain.MessageText {
+func newMessageText(messageText string) *domain.MessageText {
 	var text = domain.MessageText{}
 
 	for _, item := range strings.Split(messageText, "\n") {
@@ -124,7 +142,7 @@ func newMessageText(messageText string) domain.MessageText {
 		}
 	}
 
-	return text
+	return &text
 }
 
 // findSeparatorForString находит разделитель строки и возвращает его, возвращает 0, если в строке нет разделителя.

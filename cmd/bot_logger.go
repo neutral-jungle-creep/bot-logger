@@ -15,7 +15,7 @@ func main() {
 	config.FillConfiguration("../configs/config.json")
 
 	// запись логов в файл
-	file, err := logs.CreateOrOpenFileForLogs(&config.LogFile)
+	file, err := logs.CreateOrOpenFileForLogs(config.LogFile)
 	if err != nil {
 		log.Panic("Error in file for logs:", err)
 	}

@@ -15,7 +15,7 @@ type EditUser struct {
 	User *domain.User
 }
 
-func (u *AddUser) UpdateHandle(config *configs.Configuration) error {
+func (u *AddUser) UpdateWrite(config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (u *AddUser) UpdateHandle(config *configs.Configuration) error {
 	return result
 }
 
-func (u *EditUser) UpdateHandle(config *configs.Configuration) error {
+func (u *EditUser) UpdateWrite(config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
 		return err

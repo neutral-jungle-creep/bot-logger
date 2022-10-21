@@ -5,6 +5,8 @@ import (
 	"bot_logger/pkg/logs"
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"io"
+	"log"
 	"os"
 )
 
@@ -31,6 +33,8 @@ func (u *updateException) Run() {
 		msg := NewBotMessageForChat(u.bot, u.config.AdminTgChatID, logs.ErrWriteDB)
 		msg.SendMessageToChat()
 	}
+
+	log.Panic()
 }
 
 type botMessageForChat struct {
@@ -70,4 +74,25 @@ func (u *updateException) createFileWriteUpdate() error {
 	}
 
 	return nil
+}
+
+func ReadUnwrittenUpdate(fileName *string) (tgbotapi.Update, error) {
+	var update tgbotapi.Update
+
+	file, err := os.Open(*fileName)
+	if err != nil {
+		return update, err
+	}
+	defer file.Close()
+
+	textInFile, err := io.ReadAll(file)
+	if err != nil {
+		return update, err
+	}
+
+	if err := json.Unmarshal(textInFile, &update); err != nil {
+		return update, err
+	}
+
+	return update, nil
 }

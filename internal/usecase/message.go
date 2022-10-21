@@ -15,7 +15,7 @@ type EditMessage struct {
 	Message *domain.Message
 }
 
-func (a AddMessage) UpdateHandle(config *configs.Configuration) error {
+func (a AddMessage) UpdateWrite(config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (a AddMessage) UpdateHandle(config *configs.Configuration) error {
 	return result
 }
 
-func (e EditMessage) UpdateHandle(config *configs.Configuration) error {
+func (e EditMessage) UpdateWrite(config *configs.Configuration) error {
 	conn, err := pgSQL.NewConnectToDataBase(config)
 	if err != nil {
 		return err

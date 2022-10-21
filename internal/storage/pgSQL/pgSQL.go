@@ -107,12 +107,7 @@ func NewEditMessage(message *domain.Message, conn *pgx.Conn, config *configs.Con
 
 func (e *editMessage) DBWrite() error {
 	_, err := e.conn.Query(context.Background(), e.config.Queries.EditMessage,
-		e.message.MessageText.Query,
-		e.message.MessageText.Problem,
-		e.message.MessageText.Cause,
-		e.message.MessageText.Solution,
-		e.message.MessageText.Source,
-		//message.V4Data,
+		e.message.Text,
 		e.message.IsEdit,
 		e.message.MessageId,
 	)
@@ -129,12 +124,7 @@ func (a *addMessage) DBWrite() error {
 	_, err := a.conn.Query(context.Background(), a.config.Queries.AddMessage,
 		a.message.MessageId,
 		a.message.Date,
-		a.message.MessageText.Query,
-		a.message.MessageText.Problem,
-		a.message.MessageText.Cause,
-		a.message.MessageText.Solution,
-		a.message.MessageText.Source,
-		//message.V4Data,
+		a.message.Text,
 		a.message.IsEdit,
 		a.message.MessageSender.UserId,
 	)

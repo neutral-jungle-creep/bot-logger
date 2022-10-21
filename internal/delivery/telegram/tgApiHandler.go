@@ -4,9 +4,9 @@ import (
 	"bot_logger/configs"
 	"bot_logger/internal/domain"
 	"bot_logger/internal/usecase"
+	"bot_logger/pkg/exceptions"
 	"bot_logger/pkg/logs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"log"
 	"strconv"
 	"time"
 )
@@ -23,13 +23,12 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 			typeOfUpdate := defineUpdateType(&update)
 			handleResult := typeOfUpdate.UpdateHandle(config)
 			if handleResult != nil {
-				msg := newBotMessageForChat(bot, config.AdminTgChatID, logs.ErrWriteDB)
-				msg.sendMessageToChat()
+				except := exceptions.NewUpdateException(bot, &update, config)
+				except.Run()
 			}
 		} else {
-			log.Println("error code 403: no access")
-			msg := newBotMessageForChat(bot, update.Message.Chat.ID, logs.NoAccess)
-			msg.sendMessageToChat()
+			msg := exceptions.NewBotMessageForChat(bot, update.Message.Chat.ID, logs.NoAccess)
+			msg.SendMessageToChat()
 		}
 	}
 }
@@ -57,10 +56,6 @@ func defineUpdateType(update *tgbotapi.Update) UpdateHandler {
 		return NewEditMessage(update.EditedMessage)
 	}
 	return nil
-}
-
-type UpdateHandler interface {
-	UpdateHandle(config *configs.Configuration) error
 }
 
 func NewAddUser(u *tgbotapi.User) *usecase.AddUser {
@@ -91,6 +86,10 @@ func NewEditMessage(m *tgbotapi.Message) *usecase.EditMessage {
 	}
 }
 
+type UpdateHandler interface {
+	UpdateHandle(config *configs.Configuration) error
+}
+
 type argsForMessage struct {
 	id            string
 	date          string
@@ -111,30 +110,11 @@ func newArgsForMessage(m *tgbotapi.Message) *argsForMessage {
 func parseTimeStamp(timeStamp int) string {
 	tm, err := strconv.ParseInt(strconv.Itoa(timeStamp), 10, 64)
 	if err != nil {
-		log.Panic(err)
+		return strconv.FormatInt(tm, 10)
 	}
 
 	ut := time.Unix(tm, 0)
 	timeForStruct := ut.Format("2006-01-02T15:04:05")
 
 	return timeForStruct
-}
-
-type botMessageForChat struct {
-	bot     *tgbotapi.BotAPI
-	chatID  int64
-	message string
-}
-
-func newBotMessageForChat(bot *tgbotapi.BotAPI, chatId int64, text string) *botMessageForChat {
-	return &botMessageForChat{
-		bot:     bot,
-		chatID:  chatId,
-		message: text,
-	}
-}
-
-func (b botMessageForChat) sendMessageToChat() {
-	msg := tgbotapi.NewMessage(b.chatID, b.message)
-	b.bot.Send(msg)
 }

@@ -24,7 +24,7 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 	} else {
 		handleUpdate(bot, unwrittenUpdate, config)
 		log.Println(logs.UnwrittenWasWrite)
-		os.Remove("unwritten_data.json")
+		os.Remove("../unwritten_data.json")
 	}
 
 	// запуск запроса на поиск обновлений

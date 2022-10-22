@@ -3,7 +3,7 @@ package telegram
 import (
 	"bot_logger/configs"
 	"bot_logger/internal/domain"
-	"bot_logger/internal/usecase"
+	"bot_logger/internal/service"
 	"bot_logger/pkg/exceptions"
 	"bot_logger/pkg/logs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -24,7 +24,7 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 	} else {
 		handleUpdate(bot, unwrittenUpdate, config)
 		log.Println(logs.UnwrittenWasWrite)
-		os.Remove("../unwritten_data.json")
+		os.Remove(config.UnwrittenDataFile)
 	}
 
 	// запуск запроса на поиск обновлений
@@ -65,62 +65,39 @@ func defineUpdateType(update *tgbotapi.Update) UpdateWriter {
 		if update.Message.LeftChatMember != nil {
 			return NewEditUser(update.Message.LeftChatMember)
 		}
-		// обработка нового сообщения
 		return NewAddMessage(update.Message)
 	} else if update.EditedMessage != nil {
-		// обработка отредактированного сообщения
 		return NewEditMessage(update.EditedMessage)
 	}
 	return nil
 }
 
-func NewAddUser(u *tgbotapi.User) *usecase.AddUser {
-	return &usecase.AddUser{
-		User: domain.NewUser(u.UserName, strconv.FormatInt(u.ID, 10), true),
+func NewAddUser(u *tgbotapi.User) *service.AddUser {
+	return &service.AddUser{
+		User: domain.NewUser(u.ID, u.UserName),
 	}
 }
 
-func NewEditUser(u *tgbotapi.User) *usecase.EditUser {
-	return &usecase.EditUser{
-		User: domain.NewUser(u.UserName, strconv.FormatInt(u.ID, 10), false),
+func NewEditUser(u *tgbotapi.User) *service.EditUser {
+	return &service.EditUser{
+		User: domain.NewUser(u.ID, u.UserName),
 	}
 }
 
-func NewAddMessage(m *tgbotapi.Message) *usecase.AddMessage {
-	args := newArgsForMessage(m)
-
-	return &usecase.AddMessage{
-		Message: domain.NewMessage(args.id, args.date, false, args.text, args.messageSender),
+func NewAddMessage(m *tgbotapi.Message) *service.AddMessage {
+	return &service.AddMessage{
+		Message: domain.NewMessage(m.MessageID, m.From.ID, parseTimeStamp(m.Date), m.Text),
 	}
 }
 
-func NewEditMessage(m *tgbotapi.Message) *usecase.EditMessage {
-	args := newArgsForMessage(m)
-
-	return &usecase.EditMessage{
-		Message: domain.NewMessage(args.id, args.date, true, args.text, args.messageSender),
+func NewEditMessage(m *tgbotapi.Message) *service.EditMessage {
+	return &service.EditMessage{
+		Message: domain.NewMessage(m.MessageID, m.From.ID, parseTimeStamp(m.Date), m.Text),
 	}
 }
 
 type UpdateWriter interface {
 	UpdateWrite(config *configs.Configuration) error
-}
-
-type argsForMessage struct {
-	id            string
-	date          string
-	v4Data        string
-	text          string
-	messageSender *domain.User
-}
-
-func newArgsForMessage(m *tgbotapi.Message) *argsForMessage {
-	return &argsForMessage{
-		id:            strconv.Itoa(m.MessageID),
-		date:          parseTimeStamp(m.Date),
-		text:          m.Text,
-		messageSender: domain.NewUser(m.From.UserName, strconv.FormatInt(m.From.ID, 10), true),
-	}
 }
 
 func parseTimeStamp(timeStamp int) string {

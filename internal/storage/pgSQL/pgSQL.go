@@ -21,38 +21,42 @@ func NewConnectToDataBase(config *configs.Configuration) (*pgx.Conn, error) {
 }
 
 type addUser struct {
-	user   *domain.User
-	conn   *pgx.Conn
-	config *configs.Configuration
+	user     *domain.User
+	conn     *pgx.Conn
+	config   *configs.Configuration
+	isActive bool
 }
 
 type editUser struct {
-	user   *domain.User
-	conn   *pgx.Conn
-	config *configs.Configuration
+	user     *domain.User
+	conn     *pgx.Conn
+	config   *configs.Configuration
+	isActive bool
 }
 
-func NewAddUser(user *domain.User, conn *pgx.Conn, config *configs.Configuration) *addUser {
+func NewAddUser(user *domain.User, conn *pgx.Conn, config *configs.Configuration, isActive bool) *addUser {
 	return &addUser{
-		user:   user,
-		conn:   conn,
-		config: config,
+		user:     user,
+		conn:     conn,
+		config:   config,
+		isActive: isActive,
 	}
 }
 
-func NewEditUser(user *domain.User, conn *pgx.Conn, config *configs.Configuration) *editUser {
+func NewEditUser(user *domain.User, conn *pgx.Conn, config *configs.Configuration, isActive bool) *editUser {
 	return &editUser{
-		user:   user,
-		conn:   conn,
-		config: config,
+		user:     user,
+		conn:     conn,
+		config:   config,
+		isActive: isActive,
 	}
 }
 
 func (a *addUser) DBWrite() error {
 	_, err := a.conn.Query(context.Background(), a.config.Queries.AddUser,
 		a.user.Username,
-		a.user.UserId,
-		a.user.IsActive,
+		a.user.Id,
+		a.isActive,
 	)
 
 	if err != nil {
@@ -65,8 +69,8 @@ func (a *addUser) DBWrite() error {
 
 func (e *editUser) DBWrite() error {
 	_, err := e.conn.Query(context.Background(), e.config.Queries.EditUser,
-		e.user.IsActive,
-		e.user.UserId,
+		e.isActive,
+		e.user.Id,
 	)
 
 	if err != nil {
@@ -81,35 +85,39 @@ type addMessage struct {
 	message *domain.Message
 	conn    *pgx.Conn
 	config  *configs.Configuration
+	isEdit  bool
 }
 
 type editMessage struct {
 	message *domain.Message
 	conn    *pgx.Conn
 	config  *configs.Configuration
+	isEdit  bool
 }
 
-func NewAddMessage(message *domain.Message, conn *pgx.Conn, config *configs.Configuration) *addMessage {
+func NewAddMessage(message *domain.Message, conn *pgx.Conn, config *configs.Configuration, isEdit bool) *addMessage {
 	return &addMessage{
 		message: message,
 		conn:    conn,
 		config:  config,
+		isEdit:  isEdit,
 	}
 }
 
-func NewEditMessage(message *domain.Message, conn *pgx.Conn, config *configs.Configuration) *editMessage {
+func NewEditMessage(message *domain.Message, conn *pgx.Conn, config *configs.Configuration, isEdit bool) *editMessage {
 	return &editMessage{
 		message: message,
 		conn:    conn,
 		config:  config,
+		isEdit:  isEdit,
 	}
 }
 
 func (e *editMessage) DBWrite() error {
 	_, err := e.conn.Query(context.Background(), e.config.Queries.EditMessage,
 		e.message.Text,
-		e.message.IsEdit,
-		e.message.MessageId,
+		e.isEdit,
+		e.message.Id,
 	)
 
 	if err != nil {
@@ -122,11 +130,11 @@ func (e *editMessage) DBWrite() error {
 
 func (a *addMessage) DBWrite() error {
 	_, err := a.conn.Query(context.Background(), a.config.Queries.AddMessage,
-		a.message.MessageId,
+		a.message.Id,
 		a.message.Date,
 		a.message.Text,
-		a.message.IsEdit,
-		a.message.MessageSender.UserId,
+		a.isEdit,
+		a.message.SenderId,
 	)
 
 	if err != nil {

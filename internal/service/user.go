@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"bot_logger/configs"
@@ -21,7 +21,7 @@ func (u *AddUser) UpdateWrite(config *configs.Configuration) error {
 		return err
 	}
 
-	user := pgSQL.NewAddUser(u.User, conn, config)
+	user := pgSQL.NewAddUser(u.User, conn, config, true)
 	result := user.DBWrite()
 	conn.Close(context.Background())
 
@@ -34,7 +34,7 @@ func (u *EditUser) UpdateWrite(config *configs.Configuration) error {
 		return err
 	}
 
-	user := pgSQL.NewEditUser(u.User, conn, config)
+	user := pgSQL.NewEditUser(u.User, conn, config, false)
 	result := user.DBWrite()
 	conn.Close(context.Background())
 

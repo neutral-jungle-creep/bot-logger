@@ -8,12 +8,12 @@ import (
 )
 
 type Configuration struct {
-	Token             string `json:"token"`
-	LogFile           string `json:"logFile"`
-	UnwrittenDataFile string `json:"unwrittenDataFile"`
-	AccessChatID      int64  `json:"accessChatID"`
-	AdminTgChatID     int64  `json:"adminTgChatID"`
-	LinkToDB          string `json:"linkToDB"`
+	Token             string  `json:"token"`
+	LogFile           string  `json:"logFile"`
+	UnwrittenDataFile string  `json:"unwrittenDataFile"`
+	AccessChatID      int64   `json:"accessChatID"`
+	AdminsTgChatID    []int64 `json:"adminTgChatID"`
+	LinkToDB          string  `json:"linkToDB"`
 	Queries           struct {
 		AddUser     string `json:"addUser"`
 		EditUser    string `json:"editUser"`

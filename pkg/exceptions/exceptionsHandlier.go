@@ -26,24 +26,20 @@ func NewUpdateException(bot *tgbotapi.BotAPI, update *tgbotapi.Update, config *c
 
 func (u *updateException) Run() {
 	err := u.createFileWriteUpdate()
-	if err != nil {
-		msg := NewBotMessageForChat(u.bot, u.config.AdminTgChatID, logs.ErrWriteUpdFile)
-		msg.SendMessageToChat()
-	} else {
-		msg := NewBotMessageForChat(u.bot, u.config.AdminTgChatID, logs.ErrWriteDB)
+	if err == nil {
+		msg := NewBotMessageForChat(u.bot, u.config.AdminsTgChatID, logs.ErrWriteDB)
 		msg.SendMessageToChat()
 	}
-
 	log.Panic()
 }
 
 type botMessageForChat struct {
 	bot     *tgbotapi.BotAPI
-	chatID  int64
+	chatID  []int64
 	message string
 }
 
-func NewBotMessageForChat(bot *tgbotapi.BotAPI, chatId int64, text string) *botMessageForChat {
+func NewBotMessageForChat(bot *tgbotapi.BotAPI, chatId []int64, text string) *botMessageForChat {
 	return &botMessageForChat{
 		bot:     bot,
 		chatID:  chatId,
@@ -52,8 +48,10 @@ func NewBotMessageForChat(bot *tgbotapi.BotAPI, chatId int64, text string) *botM
 }
 
 func (b botMessageForChat) SendMessageToChat() {
-	msg := tgbotapi.NewMessage(b.chatID, b.message)
-	b.bot.Send(msg)
+	for _, id := range b.chatID {
+		msg := tgbotapi.NewMessage(id, b.message)
+		b.bot.Send(msg)
+	}
 }
 
 func (u *updateException) createFileWriteUpdate() error {

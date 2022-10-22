@@ -14,6 +14,8 @@ import (
 )
 
 func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
+	defer exceptions.NewBotMessageForChat(bot, config.AdminsTgChatID, logs.ErrWriteUpdFile).SendMessageToChat()
+
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 
@@ -34,8 +36,7 @@ func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
 		if checkChatAccess(update, config.AccessChatID) {
 			handleUpdate(bot, update, config)
 		} else {
-			msg := exceptions.NewBotMessageForChat(bot, update.Message.Chat.ID, logs.NoAccess)
-			msg.SendMessageToChat()
+			exceptions.NewBotMessageForChat(bot, []int64{update.Message.Chat.ID}, logs.NoAccess).SendMessageToChat()
 		}
 	}
 }

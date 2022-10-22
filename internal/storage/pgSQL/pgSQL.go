@@ -54,8 +54,8 @@ func NewEditUser(user *domain.User, conn *pgx.Conn, config *configs.Configuratio
 
 func (a *addUser) DBWrite() error {
 	_, err := a.conn.Query(context.Background(), a.config.Queries.AddUser,
-		a.user.Username,
 		a.user.Id,
+		a.user.Username,
 		a.isActive,
 	)
 

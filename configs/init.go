@@ -12,7 +12,7 @@ type Configuration struct {
 	LogFile           string  `json:"logFile"`
 	UnwrittenDataFile string  `json:"unwrittenDataFile"`
 	AccessChatID      int64   `json:"accessChatID"`
-	AdminsTgChatID    []int64 `json:"adminTgChatID"`
+	AdminsTgChatID    []int64 `json:"adminsTgChatID"`
 	LinkToDB          string  `json:"linkToDB"`
 	Queries           struct {
 		AddUser     string `json:"addUser"`

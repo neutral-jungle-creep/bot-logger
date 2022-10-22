@@ -1,15 +1,13 @@
 package domain
 
 type User struct {
+	Id       int64
 	Username string
-	UserId   string
-	IsActive bool
 }
 
-func NewUser(name string, id string, active bool) *User {
+func NewUser(id int64, name string) *User {
 	return &User{
+		Id:       id,
 		Username: name,
-		UserId:   id,
-		IsActive: active,
 	}
 }

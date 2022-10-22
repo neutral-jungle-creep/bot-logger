@@ -1,19 +1,17 @@
 package domain
 
 type Message struct {
-	MessageId     string
-	Date          string
-	IsEdit        bool
-	Text          string
-	MessageSender User
+	Id       int64
+	SenderId int64
+	Date     string
+	Text     string
 }
 
-func NewMessage(id string, date string, isEdit bool, text string, user *User) *Message {
+func NewMessage(id int64, senderId int64, date string, text string) *Message {
 	return &Message{
-		MessageId:     id,
-		Date:          date,
-		IsEdit:        isEdit,
-		Text:          text,
-		MessageSender: *user,
+		Id:       id,
+		SenderId: senderId,
+		Date:     date,
+		Text:     text,
 	}
 }

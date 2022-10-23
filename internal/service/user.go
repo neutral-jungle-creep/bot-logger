@@ -1,42 +1,31 @@
 package service
 
 import (
-	"bot_logger/configs"
 	"bot_logger/internal/domain"
-	"bot_logger/internal/storage/pgSQL"
-	"context"
+	"bot_logger/internal/service/dto"
 )
 
-type AddUser struct {
-	User *domain.User
+type UserStorage interface {
+	AddUser(user *domain.User) error
+	EditUser(user *domain.User) error
 }
 
-type EditUser struct {
-	User *domain.User
+type UserService struct {
+	storage UserStorage
 }
 
-func (u *AddUser) UpdateWrite(config *configs.Configuration) error {
-	conn, err := pgSQL.NewConnectToDataBase(config)
-	if err != nil {
-		return err
+func NewUserService(storage UserStorage) UserService {
+	return UserService{
+		storage: storage,
 	}
-
-	user := pgSQL.NewAddUser(u.User, conn, config, true)
-	result := user.DBWrite()
-	conn.Close(context.Background())
-
-	return result
 }
 
-func (u *EditUser) UpdateWrite(config *configs.Configuration) error {
-	conn, err := pgSQL.NewConnectToDataBase(config)
-	if err != nil {
-		return err
-	}
+func (s *UserService) AddUser(u *dto.UserDto) error {
+	user := domain.NewUser(u.Id, u.Username, u.IsActive)
+	return s.storage.AddUser(user)
+}
 
-	user := pgSQL.NewEditUser(u.User, conn, config, false)
-	result := user.DBWrite()
-	conn.Close(context.Background())
-
-	return result
+func (s *UserService) EditUser(u *dto.UserDto) error {
+	user := domain.NewUser(u.Id, u.Username, u.IsActive)
+	return s.storage.EditUser(user)
 }

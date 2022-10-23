@@ -53,7 +53,7 @@ func NewEditUser(user *domain.User, conn *pgx.Conn, config *configs.Configuratio
 }
 
 func (a *addUser) DBWrite() error {
-	_, err := a.conn.Query(context.Background(), a.config.Queries.AddUser,
+	_, err := a.conn.Exec(context.Background(), a.config.Queries.AddUser,
 		a.user.Id,
 		a.user.Username,
 		a.isActive,
@@ -68,7 +68,7 @@ func (a *addUser) DBWrite() error {
 }
 
 func (e *editUser) DBWrite() error {
-	_, err := e.conn.Query(context.Background(), e.config.Queries.EditUser,
+	_, err := e.conn.Exec(context.Background(), e.config.Queries.EditUser,
 		e.isActive,
 		e.user.Id,
 	)
@@ -114,7 +114,7 @@ func NewEditMessage(message *domain.Message, conn *pgx.Conn, config *configs.Con
 }
 
 func (e *editMessage) DBWrite() error {
-	_, err := e.conn.Query(context.Background(), e.config.Queries.EditMessage,
+	_, err := e.conn.Exec(context.Background(), e.config.Queries.EditMessage,
 		e.message.Text,
 		e.isEdit,
 		e.message.Id,
@@ -129,7 +129,7 @@ func (e *editMessage) DBWrite() error {
 }
 
 func (a *addMessage) DBWrite() error {
-	_, err := a.conn.Query(context.Background(), a.config.Queries.AddMessage,
+	_, err := a.conn.Exec(context.Background(), a.config.Queries.AddMessage,
 		a.message.Id,
 		a.message.Date,
 		a.message.Text,

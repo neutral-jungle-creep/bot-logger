@@ -1,6 +1,6 @@
-package domain
+package dto
 
-type Message struct {
+type MessageDto struct {
 	Id       int
 	SenderId int64
 	Date     string
@@ -8,8 +8,8 @@ type Message struct {
 	IsEdit   bool
 }
 
-func NewMessage(id int, senderId int64, date string, text string, isEdit bool) *Message {
-	return &Message{
+func NewMessageDto(id int, senderId int64, date string, text string, isEdit bool) *MessageDto {
+	return &MessageDto{
 		Id:       id,
 		SenderId: senderId,
 		Date:     date,

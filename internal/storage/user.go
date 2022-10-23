@@ -22,7 +22,7 @@ func (s *PgUserStorage) AddUser(user *domain.User) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.addUser"),
 		user.Id,
 		user.Username,
-		true,
+		user.IsActive,
 	)
 
 	if err != nil {
@@ -35,7 +35,7 @@ func (s *PgUserStorage) AddUser(user *domain.User) error {
 
 func (s *PgUserStorage) EditUser(user *domain.User) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.editUser"),
-		false,
+		user.IsActive,
 		user.Id,
 	)
 

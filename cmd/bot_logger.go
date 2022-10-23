@@ -2,35 +2,35 @@ package main
 
 import (
 	"bot_logger/configs"
-	"bot_logger/internal/delivery/telegram"
 	"bot_logger/pkg/logs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"io"
-	"log"
 	"os"
 )
 
 func main() {
-	var config configs.Configuration
-	config.FillConfiguration("../configs/config.json")
+	if err := configs.InitConfig("../configs"); err != nil {
+		logrus.Fatalf("init config error: %s", err.Error())
+	}
 
 	// запись логов в файл
-	file, err := logs.CreateOrOpenFileForLogs(config.LogFile)
+	file, err := logs.CreateOrOpenFileForLogs(viper.GetString("logFile"))
 	if err != nil {
-		log.Panic("Error in file for logs:", err)
+		logrus.Fatalf("Error in file for logs: %e", err)
 	}
-	wrt := io.MultiWriter(os.Stdout, file)
-	log.SetOutput(wrt)
+	logrus.SetOutput(io.MultiWriter(os.Stdout, file))
 
 	defer file.Close()
 
-	bot, err := tgbotapi.NewBotAPI(config.Token)
+	bot, err := tgbotapi.NewBotAPI(viper.GetString("token"))
 	if err != nil {
-		log.Panic("Telegram bot error:", err)
+		logrus.Fatalf("Telegram bot error: %e", err)
 	}
 
 	bot.Debug = false
-	log.Println("Bot has been started!", "Bot name is:", bot.Self.UserName)
+	logrus.Printf("Bot has been started! Bot name is: %s", bot.Self.UserName)
 
-	telegram.Run(bot, &config)
+	//telegram.Run(bot, &config)
 }

@@ -6,8 +6,8 @@ import (
 )
 
 type UserStorage interface {
-	AddUser(user *domain.User) error
-	EditUser(user *domain.User) error
+	AddUserToDB(user *domain.User) error
+	EditUserInDB(user *domain.User) error
 }
 
 type UserService struct {
@@ -22,10 +22,10 @@ func NewUserService(storage UserStorage) UserService {
 
 func (s *UserService) AddUser(u *dto.UserDto) error {
 	user := domain.NewUser(u.Id, u.Username, u.IsActive)
-	return s.storage.AddUser(user)
+	return s.storage.AddUserToDB(user)
 }
 
 func (s *UserService) EditUser(u *dto.UserDto) error {
 	user := domain.NewUser(u.Id, u.Username, u.IsActive)
-	return s.storage.EditUser(user)
+	return s.storage.EditUserInDB(user)
 }

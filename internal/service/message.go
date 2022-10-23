@@ -1,42 +1,31 @@
 package service
 
 import (
-	"bot_logger/configs"
 	"bot_logger/internal/domain"
-	"bot_logger/internal/storage/pgSQL"
-	"context"
+	"bot_logger/internal/service/dto"
 )
 
-type AddMessage struct {
-	Message *domain.Message
+type MessageStorage interface {
+	AddMessageToDB(message *domain.Message) error
+	EditMessageInDB(message *domain.Message) error
 }
 
-type EditMessage struct {
-	Message *domain.Message
+type MessageService struct {
+	storage MessageStorage
 }
 
-func (a AddMessage) UpdateWrite(config *configs.Configuration) error {
-	conn, err := pgSQL.NewConnectToDataBase(config)
-	if err != nil {
-		return err
+func NewMessageService(storage MessageStorage) *MessageService {
+	return &MessageService{
+		storage: storage,
 	}
-
-	message := pgSQL.NewAddMessage(a.Message, conn, config, false)
-	result := message.DBWrite()
-	conn.Close(context.Background())
-
-	return result
 }
 
-func (e EditMessage) UpdateWrite(config *configs.Configuration) error {
-	conn, err := pgSQL.NewConnectToDataBase(config)
-	if err != nil {
-		return err
-	}
+func (s *MessageService) AddMessage(m *dto.MessageDto) error {
+	message := domain.NewMessage(m.Id, m.SenderId, m.Date, m.Text, m.IsEdit)
+	return s.storage.AddMessageToDB(message)
+}
 
-	message := pgSQL.NewEditMessage(e.Message, conn, config, true)
-	result := message.DBWrite()
-	conn.Close(context.Background())
-
-	return result
+func (s *MessageService) EditMessage(m *dto.MessageDto) error {
+	message := domain.NewMessage(m.Id, m.SenderId, m.Date, m.Text, m.IsEdit)
+	return s.storage.EditMessageInDB(message)
 }

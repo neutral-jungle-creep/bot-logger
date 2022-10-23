@@ -9,16 +9,16 @@ import (
 )
 
 type PgMessageStorage struct {
-	db *pgx.Conn
+	conn *pgx.Conn
 }
 
-func NewPgMessageStorage(db *pgx.Conn) *PgMessageStorage {
+func NewPgMessageStorage(conn *pgx.Conn) *PgMessageStorage {
 	return &PgMessageStorage{
-		db: db,
+		conn: conn,
 	}
 }
 
-func (s *PgUserStorage) AddMessageToDB(message *domain.Message) error {
+func (s *PgMessageStorage) AddMessageToDB(message *domain.Message) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.addMessage"),
 		message.Id,
 		message.Date,
@@ -35,7 +35,7 @@ func (s *PgUserStorage) AddMessageToDB(message *domain.Message) error {
 	return nil
 }
 
-func (s *PgUserStorage) EditMessageInDB(message *domain.Message) error {
+func (s *PgMessageStorage) EditMessageInDB(message *domain.Message) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.editMessage"),
 		message.Text,
 		true,

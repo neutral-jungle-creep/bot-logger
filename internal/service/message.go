@@ -14,8 +14,8 @@ type MessageService struct {
 	storage MessageStorage
 }
 
-func NewMessageService(storage MessageStorage) *MessageService {
-	return &MessageService{
+func NewMessageService(storage MessageStorage) MessageService {
+	return MessageService{
 		storage: storage,
 	}
 }

@@ -34,7 +34,7 @@ func ReadUnwrittenUpdate(fileLink string) (*tgbotapi.Update, error) {
 func Run(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 	err := createFileWriteUpdate(update)
 	if err == nil {
-		msg := NewBotMessageForChat(bot, viper.GetInt64("adminsTgChatID"), logs.ErrWriteDB)
+		msg := NewBotMessageForChat(bot, viper.GetInt64("adminsTgChatID"), logs.ErrBot)
 		msg.SendMessageToChat()
 	}
 	log.Panic()

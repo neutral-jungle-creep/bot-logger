@@ -1,114 +1,81 @@
 package telegram
 
 import (
-	"bot_logger/configs"
-	"bot_logger/internal/domain"
-	"bot_logger/internal/service"
 	"bot_logger/pkg/exceptions"
 	"bot_logger/pkg/logs"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"log"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"os"
-	"strconv"
-	"time"
 )
 
-func Run(bot *tgbotapi.BotAPI, config *configs.Configuration) {
-	defer exceptions.NewBotMessageForChat(bot, config.AdminsTgChatID, logs.ErrWriteUpdFile).SendMessageToChat()
+func Run(bot *tgbotapi.BotAPI) {
 
-	updateConfig := tgbotapi.NewUpdate(0)
-	updateConfig.Timeout = 30
-
-	// проверка на существование не записанных в базу данных логов
-	unwrittenUpdate, err := exceptions.ReadUnwrittenUpdate(&config.UnwrittenDataFile)
+	// проверка на существование не записанных в базу данных обновлений
+	unwrittenUpdate, err := exceptions.ReadUnwrittenUpdate(viper.GetString("unwrittenDataFile"))
 	if err != nil {
-		log.Println(logs.UnwrittenUpdateNil)
+		logrus.Println("Не записанных в базу данных сообщений не сущетсвует")
 	} else {
-		handleUpdate(bot, unwrittenUpdate, config)
-		log.Println(logs.UnwrittenWasWrite)
-		os.Remove(config.UnwrittenDataFile)
+		readNewUpdate(bot, unwrittenUpdate)
+		logrus.Println("Обновления из файла были добавлены в базу данных")
+		os.Remove(viper.GetString("unwrittenDataFile"))
 	}
 
 	// запуск запроса на поиск обновлений
+	updateConfig := tgbotapi.NewUpdate(0)
+	updateConfig.Timeout = 30
 	updates := bot.GetUpdatesChan(updateConfig)
 
 	for update := range updates {
-		if checkChatAccess(update, config.AccessChatID) {
-			handleUpdate(bot, update, config)
+		if checkChatAccess(update.FromChat().ID) {
+			readNewUpdate(bot, &update)
 		} else {
-			exceptions.NewBotMessageForChat(bot, []int64{update.Message.Chat.ID}, logs.NoAccess).SendMessageToChat()
+			msg := exceptions.NewBotMessageForChat(bot, update.Message.Chat.ID, logs.NoAccess)
+			msg.SendMessageToChat()
 		}
 	}
 }
 
-func handleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update, config *configs.Configuration) {
-	typeOfUpdate := defineUpdateType(&update)
-	writeResult := typeOfUpdate.UpdateWrite(config)
-	if writeResult != nil {
-		except := exceptions.NewUpdateException(bot, &update, config)
-		except.Run()
+func readNewUpdate(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
+	if err := updateHandle(update); err != nil {
+		exceptions.Run(bot, update)
 	}
 }
 
-func checkChatAccess(update tgbotapi.Update, chatID int64) bool {
-	if update.FromChat().ID == chatID {
-		return true
-	} else {
-		return false
-	}
-}
-
-func defineUpdateType(update *tgbotapi.Update) UpdateWriter {
+func updateHandle(update *tgbotapi.Update) error {
+	handler := NewHandler()
 	if update.Message != nil {
 		if update.Message.NewChatMembers != nil {
-			return NewAddUser(&update.Message.NewChatMembers[0])
+			return handler.AddUser(&update.Message.NewChatMembers[0])
 		}
 		if update.Message.LeftChatMember != nil {
-			return NewEditUser(update.Message.LeftChatMember)
+			return handler.EditUser(update.Message.LeftChatMember)
 		}
-		return NewAddMessage(update.Message)
+		return handler.AddMessage(update.Message)
 	} else if update.EditedMessage != nil {
-		return NewEditMessage(update.EditedMessage)
+		return handler.EditMessage(update.EditedMessage)
 	}
 	return nil
 }
 
-func NewAddUser(u *tgbotapi.User) *service.AddUser {
-	return &service.AddUser{
-		User: domain.NewUser(u.ID, u.UserName),
-	}
+type Handler struct {
 }
 
-func NewEditUser(u *tgbotapi.User) *service.EditUser {
-	return &service.EditUser{
-		User: domain.NewUser(u.ID, u.UserName),
-	}
+func NewHandler() *Handler {
+	return &Handler{}
 }
 
-func NewAddMessage(m *tgbotapi.Message) *service.AddMessage {
-	return &service.AddMessage{
-		Message: domain.NewMessage(m.MessageID, m.From.ID, parseTimeStamp(m.Date), m.Text),
-	}
+type TgUpdateHandler interface {
+	AddUser(user *tgbotapi.User) error
+	EditUser(user *tgbotapi.User) error
+	AddMessage(message *tgbotapi.Message) error
+	EditMessage(message *tgbotapi.Message) error
 }
 
-func NewEditMessage(m *tgbotapi.Message) *service.EditMessage {
-	return &service.EditMessage{
-		Message: domain.NewMessage(m.MessageID, m.From.ID, parseTimeStamp(m.Date), m.Text),
+func checkChatAccess(chatID int64) bool {
+	if chatID == viper.GetInt64("accessChatID") {
+		return true
+	} else {
+		return false
 	}
-}
-
-type UpdateWriter interface {
-	UpdateWrite(config *configs.Configuration) error
-}
-
-func parseTimeStamp(timeStamp int) string {
-	tm, err := strconv.ParseInt(strconv.Itoa(timeStamp), 10, 64)
-	if err != nil {
-		return strconv.FormatInt(tm, 10)
-	}
-
-	ut := time.Unix(tm, 0)
-	timeForStruct := ut.Format("2006-01-02T15:04:05")
-
-	return timeForStruct
 }

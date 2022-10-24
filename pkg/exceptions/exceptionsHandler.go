@@ -4,9 +4,9 @@ import (
 	"bot_logger/pkg/logs"
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io"
-	"log"
 	"os"
 )
 
@@ -37,7 +37,7 @@ func Run(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
 		msg := NewBotMessageForChat(bot, viper.GetInt64("adminsTgChatID"), logs.ErrBot)
 		msg.SendMessageToChat()
 	}
-	log.Panic()
+	logrus.Panic()
 }
 
 func createFileWriteUpdate(update *tgbotapi.Update) error {

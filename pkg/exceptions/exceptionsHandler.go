@@ -1,67 +1,53 @@
 package exceptions
 
 import (
-	"bot_logger/configs"
 	"bot_logger/pkg/logs"
 	"encoding/json"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os"
 )
 
-type updateException struct {
-	bot    *tgbotapi.BotAPI
-	update *tgbotapi.Update
-	config *configs.Configuration
-}
+func ReadUnwrittenUpdate(fileLink string) (*tgbotapi.Update, error) {
+	var update tgbotapi.Update
 
-func NewUpdateException(bot *tgbotapi.BotAPI, update *tgbotapi.Update, config *configs.Configuration) *updateException {
-	return &updateException{
-		bot:    bot,
-		update: update,
-		config: config,
+	file, err := os.Open(fileLink)
+	if err != nil {
+		return nil, err
 	}
+	defer file.Close()
+
+	textInFile, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(textInFile, &update); err != nil {
+		return nil, err
+	}
+
+	return &update, nil
 }
 
-func (u *updateException) Run() {
-	err := u.createFileWriteUpdate()
+func Run(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
+	err := createFileWriteUpdate(update)
 	if err == nil {
-		msg := NewBotMessageForChat(u.bot, u.config.AdminsTgChatID, logs.ErrWriteDB)
+		msg := NewBotMessageForChat(bot, viper.GetInt64("adminsTgChatID"), logs.ErrWriteDB)
 		msg.SendMessageToChat()
 	}
 	log.Panic()
 }
 
-type botMessageForChat struct {
-	bot     *tgbotapi.BotAPI
-	chatID  []int64
-	message string
-}
-
-func NewBotMessageForChat(bot *tgbotapi.BotAPI, chatId []int64, text string) *botMessageForChat {
-	return &botMessageForChat{
-		bot:     bot,
-		chatID:  chatId,
-		message: text,
-	}
-}
-
-func (b botMessageForChat) SendMessageToChat() {
-	for _, id := range b.chatID {
-		msg := tgbotapi.NewMessage(id, b.message)
-		b.bot.Send(msg)
-	}
-}
-
-func (u *updateException) createFileWriteUpdate() error {
-	file, err := os.Create(u.config.UnwrittenDataFile)
+func createFileWriteUpdate(update *tgbotapi.Update) error {
+	file, err := os.Create(viper.GetString("unwrittenDataFile"))
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	jsonUpdate, err := json.Marshal(u.update)
+	jsonUpdate, err := json.Marshal(update)
 	if err != nil {
 		return err
 	}
@@ -74,23 +60,21 @@ func (u *updateException) createFileWriteUpdate() error {
 	return nil
 }
 
-func ReadUnwrittenUpdate(fileName *string) (tgbotapi.Update, error) {
-	var update tgbotapi.Update
+type botMessageForChat struct {
+	bot     *tgbotapi.BotAPI
+	chatID  int64
+	message string
+}
 
-	file, err := os.Open(*fileName)
-	if err != nil {
-		return update, err
+func NewBotMessageForChat(bot *tgbotapi.BotAPI, chatId int64, text string) *botMessageForChat {
+	return &botMessageForChat{
+		bot:     bot,
+		chatID:  chatId,
+		message: text,
 	}
-	defer file.Close()
+}
 
-	textInFile, err := io.ReadAll(file)
-	if err != nil {
-		return update, err
-	}
-
-	if err := json.Unmarshal(textInFile, &update); err != nil {
-		return update, err
-	}
-
-	return update, nil
+func (b botMessageForChat) SendMessageToChat() {
+	msg := tgbotapi.NewMessage(b.chatID, b.message)
+	b.bot.Send(msg)
 }

@@ -12,7 +12,11 @@ import (
 )
 
 func (h *Handler) AddMessage(message *tgbotapi.Message) error {
-	messageService := messageComposite()
+	messageService, err := messageComposite()
+	if err != nil {
+		return err
+	}
+
 	messageDto := dto.NewMessageDto(message.MessageID, message.From.ID, parseTimeStamp(message.Date),
 		message.Text, false)
 	result := messageService.AddMessage(messageDto)
@@ -20,22 +24,27 @@ func (h *Handler) AddMessage(message *tgbotapi.Message) error {
 }
 
 func (h *Handler) EditMessage(message *tgbotapi.Message) error {
-	messageService := messageComposite()
+	messageService, err := messageComposite()
+	if err != nil {
+		return err
+	}
+
 	messageDto := dto.NewMessageDto(message.MessageID, message.From.ID, parseTimeStamp(message.Date),
 		message.Text, true)
 	result := messageService.EditMessage(messageDto)
 	return result
 }
 
-func messageComposite() *service.MessageService {
+func messageComposite() (*service.MessageService, error) {
 	conn, err := pgSQL.NewPgConnect()
 	if err != nil {
-		logrus.Fatalf("Ошибка подключения к базе данных: %s", err.Error())
+		logrus.Infof("Ошибка подключения к базе данных: %s", err.Error())
+		return nil, err
 	}
 
 	stor := storage.NewPgMessageStorage(conn)
 	serv := service.NewMessageService(stor)
-	return &serv
+	return &serv, nil
 }
 
 func parseTimeStamp(timeStamp int) string {

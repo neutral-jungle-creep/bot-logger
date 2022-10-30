@@ -16,12 +16,12 @@ func NewMessageService(storage storage.Message) *MessageService {
 	}
 }
 
-func (s *MessageService) AddMessageToDB(m *dto.MessageDto) error {
+func (s *MessageService) AddChatMessage(m *dto.MessageDto) error {
 	message := domain.NewMessage(m.Id, m.SenderId, m.Date, m.Text, m.IsEdit)
 	return s.storage.AddMessage(message)
 }
 
-func (s *MessageService) EditMessageInDB(m *dto.MessageDto) error {
+func (s *MessageService) EditChatMessage(m *dto.MessageDto) error {
 	message := domain.NewMessage(m.Id, m.SenderId, m.Date, m.Text, m.IsEdit)
 	return s.storage.EditMessage(message)
 }

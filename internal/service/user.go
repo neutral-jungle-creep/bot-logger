@@ -16,12 +16,16 @@ func NewUserService(storage storage.User) *UserService {
 	}
 }
 
-func (s *UserService) AddUserToDB(u *dto.UserDto) error {
-	user := domain.NewUser(u.Id, u.Username, u.IsActive)
-	return s.storage.AddUser(user)
+func (s *UserService) AddChatMember(u *dto.UserDto) error {
+	user := domain.NewUser(u.Id, u.Username, true)
+	if s.storage.GetUser(user) != 0 {
+		return s.storage.EditUser(user)
+	} else {
+		return s.storage.AddUser(user)
+	}
 }
 
-func (s *UserService) EditUserInDB(u *dto.UserDto) error {
-	user := domain.NewUser(u.Id, u.Username, u.IsActive)
+func (s *UserService) LeaveChatMember(u *dto.UserDto) error {
+	user := domain.NewUser(u.Id, u.Username, false)
 	return s.storage.EditUser(user)
 }

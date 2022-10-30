@@ -6,13 +6,13 @@ import (
 )
 
 type User interface {
-	AddUserToDB(u *dto.UserDto) error
-	EditUserInDB(u *dto.UserDto) error
+	AddChatMember(u *dto.UserDto) error
+	LeaveChatMember(u *dto.UserDto) error
 }
 
 type Message interface {
-	EditMessageInDB(m *dto.MessageDto) error
-	AddMessageToDB(m *dto.MessageDto) error
+	AddChatMessage(m *dto.MessageDto) error
+	EditChatMessage(m *dto.MessageDto) error
 }
 
 type Service struct {

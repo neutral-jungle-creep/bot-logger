@@ -20,7 +20,7 @@ func NewPgUserStorage(conn *pgx.Conn) *PgUserStorage {
 
 func (s *PgUserStorage) GetUser(user *domain.User) int {
 	var userId int
-	result := s.conn.QueryRow(context.Background(), viper.GetString("queries.getUser"), user.Id, user.Username)
+	result := s.conn.QueryRow(context.Background(), viper.GetString("queries.getUser"), user.Id)
 	if err := result.Scan(&userId); err != nil {
 		return 0
 	}

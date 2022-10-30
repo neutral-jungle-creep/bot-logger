@@ -3,29 +3,25 @@ package service
 import (
 	"bot_logger/internal/domain"
 	"bot_logger/internal/service/dto"
+	"bot_logger/internal/storage"
 )
 
-type UserStorage interface {
-	AddUserToDB(user *domain.User) error
-	EditUserInDB(user *domain.User) error
-}
-
 type UserService struct {
-	storage UserStorage
+	storage storage.User
 }
 
-func NewUserService(storage UserStorage) UserService {
-	return UserService{
+func NewUserService(storage storage.User) *UserService {
+	return &UserService{
 		storage: storage,
 	}
 }
 
-func (s *UserService) AddUser(u *dto.UserDto) error {
+func (s *UserService) AddUserToDB(u *dto.UserDto) error {
 	user := domain.NewUser(u.Id, u.Username, u.IsActive)
-	return s.storage.AddUserToDB(user)
+	return s.storage.AddUser(user)
 }
 
-func (s *UserService) EditUser(u *dto.UserDto) error {
+func (s *UserService) EditUserInDB(u *dto.UserDto) error {
 	user := domain.NewUser(u.Id, u.Username, u.IsActive)
-	return s.storage.EditUserInDB(user)
+	return s.storage.EditUser(user)
 }

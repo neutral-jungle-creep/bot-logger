@@ -3,29 +3,25 @@ package service
 import (
 	"bot_logger/internal/domain"
 	"bot_logger/internal/service/dto"
+	"bot_logger/internal/storage"
 )
 
-type MessageStorage interface {
-	AddMessageToDB(message *domain.Message) error
-	EditMessageInDB(message *domain.Message) error
-}
-
 type MessageService struct {
-	storage MessageStorage
+	storage storage.Message
 }
 
-func NewMessageService(storage MessageStorage) MessageService {
-	return MessageService{
+func NewMessageService(storage storage.Message) *MessageService {
+	return &MessageService{
 		storage: storage,
 	}
 }
 
-func (s *MessageService) AddMessage(m *dto.MessageDto) error {
+func (s *MessageService) AddMessageToDB(m *dto.MessageDto) error {
 	message := domain.NewMessage(m.Id, m.SenderId, m.Date, m.Text, m.IsEdit)
-	return s.storage.AddMessageToDB(message)
+	return s.storage.AddMessage(message)
 }
 
-func (s *MessageService) EditMessage(m *dto.MessageDto) error {
+func (s *MessageService) EditMessageInDB(m *dto.MessageDto) error {
 	message := domain.NewMessage(m.Id, m.SenderId, m.Date, m.Text, m.IsEdit)
-	return s.storage.EditMessageInDB(message)
+	return s.storage.EditMessage(message)
 }

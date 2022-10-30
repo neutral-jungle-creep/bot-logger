@@ -1,8 +1,10 @@
 package telegram
 
 import (
+	"bot_logger/internal/storage/pgSQL"
 	"bot_logger/pkg/exceptions"
 	"bot_logger/pkg/logs"
+	"context"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -37,39 +39,32 @@ func Run(bot *tgbotapi.BotAPI) {
 }
 
 func readNewUpdate(bot *tgbotapi.BotAPI, update *tgbotapi.Update) {
-	if err := updateHandle(update); err != nil {
+	conn, err := pgSQL.NewPgConnect()
+	if err != nil {
+		logrus.Panicf("Ошибка подключения к базе данных: %s", err.Error())
+	}
+	defer conn.Close(context.Background())
+
+	handler := HandlerComposite(conn)
+
+	if err := updateHandle(update, handler); err != nil {
 		exceptions.Run(bot, update)
 	}
 }
 
-func updateHandle(update *tgbotapi.Update) error {
-	handler := NewHandler()
+func updateHandle(update *tgbotapi.Update, h *Handler) error {
 	if update.Message != nil {
 		if update.Message.NewChatMembers != nil {
-			return handler.AddUser(&update.Message.NewChatMembers[0])
+			return h.AddUser(&update.Message.NewChatMembers[0])
 		}
 		if update.Message.LeftChatMember != nil {
-			return handler.EditUser(update.Message.LeftChatMember)
+			return h.EditUser(update.Message.LeftChatMember)
 		}
-		return handler.AddMessage(update.Message)
+		return h.AddMessage(update.Message)
 	} else if update.EditedMessage != nil {
-		return handler.EditMessage(update.EditedMessage)
+		return h.EditMessage(update.EditedMessage)
 	}
 	return nil
-}
-
-type Handler struct {
-}
-
-func NewHandler() *Handler {
-	return &Handler{}
-}
-
-type TgUpdateHandler interface {
-	AddUser(user *tgbotapi.User) error
-	EditUser(user *tgbotapi.User) error
-	AddMessage(message *tgbotapi.Message) error
-	EditMessage(message *tgbotapi.Message) error
 }
 
 func checkChatAccess(chatID int64) bool {

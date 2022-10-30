@@ -6,7 +6,7 @@ import (
 )
 
 type User interface {
-	GetUser(user *domain.User) error
+	GetUser(user *domain.User) int
 	AddUser(user *domain.User) error
 	EditUser(user *domain.User) error
 }

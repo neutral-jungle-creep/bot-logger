@@ -18,7 +18,7 @@ func NewPgMessageStorage(conn *pgx.Conn) *PgMessageStorage {
 	}
 }
 
-func (s *PgMessageStorage) AddMessageToDB(message *domain.Message) error {
+func (s *PgMessageStorage) AddMessage(message *domain.Message) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.addMessage"),
 		message.Id,
 		message.Date,
@@ -35,7 +35,7 @@ func (s *PgMessageStorage) AddMessageToDB(message *domain.Message) error {
 	return nil
 }
 
-func (s *PgMessageStorage) EditMessageInDB(message *domain.Message) error {
+func (s *PgMessageStorage) EditMessage(message *domain.Message) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.editMessage"),
 		message.Text,
 		true,

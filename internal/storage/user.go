@@ -18,7 +18,16 @@ func NewPgUserStorage(conn *pgx.Conn) *PgUserStorage {
 	}
 }
 
-func (s *PgUserStorage) AddUserToDB(user *domain.User) error {
+func (s *PgUserStorage) GetUser(user *domain.User) int {
+	var userId int
+	result := s.conn.QueryRow(context.Background(), viper.GetString("queries.getUser"), user.Id, user.Username)
+	if err := result.Scan(&userId); err != nil {
+		return 0
+	}
+	return userId
+}
+
+func (s *PgUserStorage) AddUser(user *domain.User) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.addUser"),
 		user.Id,
 		user.Username,
@@ -33,7 +42,7 @@ func (s *PgUserStorage) AddUserToDB(user *domain.User) error {
 	return nil
 }
 
-func (s *PgUserStorage) EditUserInDB(user *domain.User) error {
+func (s *PgUserStorage) EditUser(user *domain.User) error {
 	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.editUser"),
 		user.IsActive,
 		user.Id,

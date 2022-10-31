@@ -19,7 +19,7 @@
 
 **участники**
 
-поля: id, user_name, tg_user_id, active_user
+поля: id, tg_user_name, tg_user_id, active_user
 
 - при добавлении нового пользователя, создается запись о нем: его порядковый номер в таблице, никней в телеграм, телеграм айди, булево значение _true_ - это означает что пользователь является участновом чата.
 - при удалении пользователя, в столбце **active_user** значение меняется на _false_.
@@ -31,7 +31,7 @@
 CREATE TABLE IF NOT EXISTS public.users
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    user_name character varying(100) COLLATE pg_catalog."default",
+    tg_user_name character varying(100) COLLATE pg_catalog."default",
     tg_user_id integer,
     active_user boolean,
     CONSTRAINT users_pkey PRIMARY KEY (id)

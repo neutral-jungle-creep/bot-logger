@@ -5,7 +5,6 @@ import (
 	"bot_logger/internal/delivery/telegram"
 	"bot_logger/pkg/exceptions"
 	"bot_logger/pkg/logs"
-	"flag"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -14,13 +13,7 @@ import (
 )
 
 func main() {
-	var configPath, configFile string
-
-	flag.StringVar(&configPath, "path", "configs", "")
-	flag.StringVar(&configFile, "config", "config", "")
-	flag.Parse()
-
-	if err := configs.InitConfig(configPath, configFile); err != nil {
+	if err := configs.InitConfig(); err != nil {
 		logrus.Fatalf("init config error: %s", err.Error())
 	}
 

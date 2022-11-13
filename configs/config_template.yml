@@ -1,6 +1,6 @@
 token: "*********************************"
-logFile: "../logs.log"
-unwrittenDataFile: "../unwritten_data.json"
+logFile: "logs.log"
+unwrittenDataFile: "unwritten_data.json"
 accessChatID: -11111111
 adminsTgChatID: 11111111
 linkToDB: "postgres://username:password@localhost:5432/database_name"

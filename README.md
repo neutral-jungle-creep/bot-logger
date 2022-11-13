@@ -81,8 +81,8 @@ go run .\cmd\bot_logger.go --path my_folder --config my_config
 
 ```yml
 token: "*********************************"
-logFile: "../logs.log"
-unwrittenDataFile: "../unwritten_data.json"
+logFile: "logs.log"
+unwrittenDataFile: "unwritten_data.json"
 accessChatID: -11111111
 adminsTgChatID: 11111111
 linkToDB: "postgres://username:password@localhost:5432/database_name"

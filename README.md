@@ -87,11 +87,6 @@ unwrittenDataFile: "unwritten_data.json"
 accessChatID: -11111111
 adminsTgChatID: 11111111
 linkToDB: "postgres://username:password@localhost:5432/database_name"
-queries:
-  addUser: "INSERT INTO public.\"users\" (tg_user_id, user_name, active_user) VALUES ($1, $2, $3);"
-  editUser: "UPDATE public.\"users\" SET active_user=$1 WHERE tg_user_id=$2;"
-  addMessage: "INSERT INTO public.\"messages\" (message_id, date, text, is_edit, user_id) VALUES ($1, $2, $3, $4, (SELECT id FROM public.\"users\" WHERE tg_user_id = $5));"
-  editMessage: "UPDATE public.\"messages\" SET text=$1, is_edit=$2 WHERE message_id=$3;"
 ```
 
 ### пояснения к полям:
@@ -102,7 +97,6 @@ queries:
 - **accessChatID** - чат в котором бот не будет игнорировать сообщения.
 - **adminsTgChatID** - пользователь, который будет получать в личные сообщения уведомления об остановке работы бота. [подробнее](#исключения)
 - **linkToDB** - ссылка для подключения к базе данных
-- **queries** - sql запросы с помощью которых будет осуществляться добавление и редактирование данных в таблицах.
 
 ## исключения
 

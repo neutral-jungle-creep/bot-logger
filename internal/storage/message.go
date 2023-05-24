@@ -5,7 +5,13 @@ import (
 	"context"
 	"github.com/jackc/pgx/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+)
+
+const (
+	addMessage = `INSERT INTO public.messages (message_id, date, text, is_edit, user_id) 
+VALUES ($1, $2, $3, $4, (SELECT id FROM public.users WHERE tg_user_id = $5));`
+
+	editMessage = `UPDATE public.messages SET text=$1, is_edit=$2 WHERE message_id=$3;`
 )
 
 type PgMessageStorage struct {
@@ -19,7 +25,7 @@ func NewPgMessageStorage(conn *pgx.Conn) *PgMessageStorage {
 }
 
 func (s *PgMessageStorage) AddMessage(message *domain.Message) error {
-	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.addMessage"),
+	_, err := s.conn.Exec(context.Background(), addMessage,
 		message.Id,
 		message.Date,
 		message.Text,
@@ -36,7 +42,7 @@ func (s *PgMessageStorage) AddMessage(message *domain.Message) error {
 }
 
 func (s *PgMessageStorage) EditMessage(message *domain.Message) error {
-	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.editMessage"),
+	_, err := s.conn.Exec(context.Background(), editMessage,
 		message.Text,
 		true,
 		message.Id,

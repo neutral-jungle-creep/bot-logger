@@ -5,7 +5,14 @@ import (
 	"context"
 	"github.com/jackc/pgx/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+)
+
+const (
+	addUser = `INSERT INTO public.users (tg_user_id, tg_user_name, active_user) VALUES ($1, $2, $3);`
+
+	editUser = `UPDATE public.users SET active_user=$1 WHERE tg_user_id=$2;`
+
+	getUser = `SELECT id FROM public.users WHERE tg_user_id=$1`
 )
 
 type PgUserStorage struct {
@@ -20,7 +27,7 @@ func NewPgUserStorage(conn *pgx.Conn) *PgUserStorage {
 
 func (s *PgUserStorage) GetUser(user *domain.User) int {
 	var userId int
-	result := s.conn.QueryRow(context.Background(), viper.GetString("queries.getUser"), user.Id)
+	result := s.conn.QueryRow(context.Background(), getUser, user.Id)
 	if err := result.Scan(&userId); err != nil {
 		return 0
 	}
@@ -28,7 +35,7 @@ func (s *PgUserStorage) GetUser(user *domain.User) int {
 }
 
 func (s *PgUserStorage) AddUser(user *domain.User) error {
-	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.addUser"),
+	_, err := s.conn.Exec(context.Background(), addUser,
 		user.Id,
 		user.Username,
 		user.IsActive,
@@ -43,7 +50,7 @@ func (s *PgUserStorage) AddUser(user *domain.User) error {
 }
 
 func (s *PgUserStorage) EditUser(user *domain.User) error {
-	_, err := s.conn.Exec(context.Background(), viper.GetString("queries.editUser"),
+	_, err := s.conn.Exec(context.Background(), editUser,
 		user.IsActive,
 		user.Id,
 	)
